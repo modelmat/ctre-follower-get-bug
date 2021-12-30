@@ -8,6 +8,8 @@
 
 #include <frc/TimedRobot.h>
 #include <frc/smartdashboard/SendableChooser.h>
+#include <ctre/phoenix/motorcontrol/can/WPI_TalonSRX.h>
+#include <frc/Timer.h>
 
 class Robot : public frc::TimedRobot {
  public:
@@ -27,4 +29,8 @@ class Robot : public frc::TimedRobot {
   const std::string kAutoNameDefault = "Default";
   const std::string kAutoNameCustom = "My Auto";
   std::string m_autoSelected;
+
+  frc::Timer m_timer;
+  ctre::phoenix::motorcontrol::can::WPI_TalonSRX m_motor0{0};
+  ctre::phoenix::motorcontrol::can::WPI_TalonSRX m_motor1{1};
 };

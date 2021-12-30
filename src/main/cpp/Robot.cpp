@@ -7,11 +7,15 @@
 #include <fmt/core.h>
 
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <units/math.h>
+#include <wpi/numbers>
 
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+
+  m_motor1.Follow(m_motor0);
 }
 
 /**
@@ -22,7 +26,13 @@ void Robot::RobotInit() {
  * <p> This runs after the mode specific periodic functions, but before
  * LiveWindow and SmartDashboard integrated updating.
  */
-void Robot::RobotPeriodic() {}
+void Robot::RobotPeriodic() {
+  frc::SmartDashboard::PutNumber("Motor 0 Get", m_motor0.Get());
+  frc::SmartDashboard::PutNumber("Motor 1 Get", m_motor1.Get());
+  // These work
+  // frc::SmartDashboard::PutNumber("Motor 0 Get", m_motor0.GetMotorOutputPercent());
+  // frc::SmartDashboard::PutNumber("Motor 1 Get", m_motor1.GetMotorOutputPercent());
+}
 
 /**
  * This autonomous (along with the chooser code above) shows how to select
@@ -56,9 +66,19 @@ void Robot::AutonomousPeriodic() {
   }
 }
 
-void Robot::TeleopInit() {}
+void Robot::TeleopInit() {
+  m_timer.Reset();
+  m_timer.Start();
+}
 
-void Robot::TeleopPeriodic() {}
+void Robot::TeleopPeriodic() {
+  // Just run a periodic sine function
+  m_motor0.Set(units::math::sin(m_timer.Get().value() * units::angle::radian_t{2 * wpi::numbers::pi}));
+
+  // This doesn't work for either of them!
+  // m_motor0.Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput,
+  //              units::math::sin(m_timer.Get().value() * units::angle::radian_t{2 * wpi::numbers::pi}));
+}
 
 void Robot::DisabledInit() {}
 
