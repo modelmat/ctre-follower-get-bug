@@ -12,22 +12,15 @@
 
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
-  m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
+  m_chooser.AddOption(kAutoNameInverted, kAutoNameInverted);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
 
-  m_motor0.SetInverted(false);
-  m_motor0.SetSensorPhase(false);
-  m_motor1.SetInverted(true);
-  m_motor1.SetSensorPhase(true);
-  m_motor2.SetInverted(true);
-  m_motor2.SetSensorPhase(false);
-
-  m_falcon0.SetInverted(false);
-  m_falcon0.SetSensorPhase(false);
-  m_falcon1.SetInverted(true);
-  m_falcon1.SetSensorPhase(true);
-  m_falcon2.SetInverted(true);
-  m_falcon2.SetSensorPhase(false);
+  // This is not about motor inversion but about encoder phases.
+  // If positive inversion = negative encoder output AND negative inversion = positive encoder output
+  // Then flip this.
+  // SetInverted() will flip sensor direction as well,
+  m_SRX.SetSensorPhase(false);
+  m_FX.SetSensorPhase(false);
 }
 
 /**
@@ -39,12 +32,32 @@ void Robot::RobotInit() {
  * LiveWindow and SmartDashboard integrated updating.
  */
 void Robot::RobotPeriodic() {
-  frc::SmartDashboard::PutNumber("SRX Normal Vel", m_motor0.GetSelectedSensorVelocity());
-  frc::SmartDashboard::PutNumber("SRX Inverted Vel", m_motor1.GetSelectedSensorVelocity());
-  frc::SmartDashboard::PutNumber("SRX No SensorPhase Inverted Vel", m_motor2.GetSelectedSensorVelocity());
-  frc::SmartDashboard::PutNumber("Falcon Normal Vel", m_falcon0.GetSelectedSensorVelocity());
-  frc::SmartDashboard::PutNumber("Falcon Inverted Vel", m_falcon1.GetSelectedSensorVelocity());
-  frc::SmartDashboard::PutNumber("Falcon No SensorPhase Inverted Vel", m_falcon2.GetSelectedSensorVelocity());
+  frc::SmartDashboard::PutNumber("Spark Get", m_spark.Get());
+  frc::SmartDashboard::PutNumber("SRX Get", m_SRX.Get());
+  frc::SmartDashboard::PutNumber("FX Get", m_FX.Get());
+  frc::SmartDashboard::PutNumber("SRX Vel", m_SRX.GetSelectedSensorVelocity());
+  frc::SmartDashboard::PutNumber("FX Vel", m_FX.GetSelectedSensorVelocity());
+  frc::SmartDashboard::PutNumber("Spark Vel", m_sparkEncoder.GetRate());
+  frc::SmartDashboard::PutNumber("SRX Pos", m_SRX.GetSelectedSensorPosition());
+  frc::SmartDashboard::PutNumber("FX Pos", m_FX.GetSelectedSensorPosition());
+  frc::SmartDashboard::PutNumber("Spark Pos", m_sparkEncoder.GetDistance());
+
+  m_autoSelected = m_chooser.GetSelected();
+  if (m_autoSelected == kAutoNameInverted) {
+      m_spark.SetInverted(true);
+    m_sparkEncoder.SetReverseDirection(true);
+
+    m_SRX.SetInverted(true);
+
+    m_FX.SetInverted(true);
+  } else {
+    m_spark.SetInverted(false);
+    m_sparkEncoder.SetReverseDirection(false);
+
+    m_SRX.SetInverted(false);
+
+    m_FX.SetInverted(false);
+  }
 }
 
 /**
@@ -58,37 +71,16 @@ void Robot::RobotPeriodic() {
  * if-else structure below with additional strings. If using the SendableChooser
  * make sure to add them to the chooser code above as well.
  */
-void Robot::AutonomousInit() {
-  m_autoSelected = m_chooser.GetSelected();
-  // m_autoSelected = SmartDashboard::GetString("Auto Selector",
-  //     kAutoNameDefault);
-  fmt::print("Auto selected: {}\n", m_autoSelected);
+void Robot::AutonomousInit() {}
 
-  if (m_autoSelected == kAutoNameCustom) {
-    // Custom Auto goes here
-  } else {
-    // Default Auto goes here
-  }
-}
-
-void Robot::AutonomousPeriodic() {
-  if (m_autoSelected == kAutoNameCustom) {
-    // Custom Auto goes here
-  } else {
-    // Default Auto goes here
-  }
-}
+void Robot::AutonomousPeriodic() {}
 
 void Robot::TeleopInit() {}
 
 void Robot::TeleopPeriodic() {
-  // Just run a periodic sine function
-  m_motor0.Set(-1);
-  m_motor1.Set(-1);
-  m_motor2.Set(-1);
-  m_falcon0.Set(-1);
-  m_falcon1.Set(-1);
-  m_falcon2.Set(-1);
+  m_spark.Set(1);
+  m_SRX.Set(1);
+  m_FX.Set(1);
 }
 
 void Robot::DisabledInit() {}
@@ -102,33 +94,22 @@ void Robot::TestPeriodic() {}
 void Robot::SimulationInit() {}
 
 void Robot::SimulationPeriodic() {
-  m_driveSim1.SetInputs(m_motor0.Get() * 12_V, m_motor0.Get() * 12_V);
-  m_driveSim2.SetInputs(m_motor1.Get() * 12_V, m_motor1.Get() * 12_V);
-  m_driveSim3.SetInputs(m_motor2.Get() * 12_V, m_motor2.Get() * 12_V);
-  m_driveSim4.SetInputs(m_falcon0.Get() * 12_V, m_falcon0.Get() * 12_V);
-  m_driveSim5.SetInputs(m_falcon1.Get() * 12_V, m_falcon1.Get() * 12_V);
-  m_driveSim6.SetInputs(m_falcon2.Get() * 12_V, m_falcon2.Get() * 12_V);
+  m_driveSimSRX.SetInputs(m_SRX.Get() * 12_V, m_SRX.Get() * 12_V);
+  m_driveSimFX.SetInputs(m_FX.Get() * 12_V, m_FX.Get() * 12_V);
+  m_driveSimSpark.SetInputs(m_spark.Get() * 12_V, m_spark.Get() * 12_V);
 
-  m_driveSim1.Update(20_ms);
-  m_driveSim2.Update(20_ms);
-  m_driveSim3.Update(20_ms);
-  m_driveSim4.Update(20_ms);
-  m_driveSim5.Update(20_ms);
-  m_driveSim6.Update(20_ms);
+  m_driveSimSRX.Update(20_ms);
+  m_driveSimFX.Update(20_ms);
+  m_driveSimSpark.Update(20_ms);
 
-  m_motorSim0.SetQuadratureRawPosition(m_driveSim1.GetLeftPosition().value());
-  m_motorSim1.SetQuadratureRawPosition(m_driveSim2.GetLeftPosition().value());
-  m_motorSim2.SetQuadratureRawPosition(m_driveSim3.GetLeftPosition().value());
-  m_motorSim0.SetQuadratureVelocity(m_driveSim1.GetLeftVelocity().value());
-  m_motorSim1.SetQuadratureVelocity(m_driveSim2.GetLeftVelocity().value());
-  m_motorSim2.SetQuadratureVelocity(m_driveSim3.GetLeftVelocity().value());
+  m_SRXSim.SetQuadratureRawPosition((m_SRX.GetInverted() ? -1 : 1) * m_driveSimSRX.GetLeftPosition().value());
+  m_SRXSim.SetQuadratureVelocity((m_SRX.GetInverted() ? -1 : 1) * m_driveSimSRX.GetLeftVelocity().value());
 
-  m_falconSim0.SetIntegratedSensorRawPosition(m_driveSim4.GetLeftPosition().value());
-  m_falconSim1.SetIntegratedSensorRawPosition(m_driveSim5.GetLeftPosition().value());
-  m_falconSim2.SetIntegratedSensorRawPosition(m_driveSim6.GetLeftPosition().value());
-  m_falconSim0.SetIntegratedSensorVelocity(m_driveSim4.GetLeftVelocity().value());
-  m_falconSim1.SetIntegratedSensorVelocity(m_driveSim5.GetLeftVelocity().value());
-  m_falconSim2.SetIntegratedSensorVelocity(m_driveSim6.GetLeftVelocity().value());
+  m_FXSim.SetIntegratedSensorRawPosition((m_FX.GetInverted() ? -1 : 1) * m_driveSimFX.GetLeftPosition().value());
+  m_FXSim.SetIntegratedSensorVelocity((m_FX.GetInverted() ? -1 : 1) * m_driveSimFX.GetLeftVelocity().value());
+
+  m_sparkEncoderSim.SetDistance(m_driveSimSpark.GetLeftPosition().value());
+  m_sparkEncoderSim.SetRate(m_driveSimSpark.GetLeftVelocity().value());
 }
 
 #ifndef RUNNING_FRC_TESTS

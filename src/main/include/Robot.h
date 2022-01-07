@@ -14,6 +14,9 @@
 #include <ctre/phoenix/motorcontrol/TalonFXSimCollection.h>
 #include <frc/simulation/DifferentialDrivetrainSim.h>
 #include <frc/Timer.h>
+#include <frc/motorcontrol/PWMSparkMax.h>
+#include <frc/Encoder.h>
+#include <frc/simulation/EncoderSim.h>
 
 class Robot : public frc::TimedRobot {
  public:
@@ -32,56 +35,34 @@ class Robot : public frc::TimedRobot {
 
  private:
   frc::SendableChooser<std::string> m_chooser;
-  const std::string kAutoNameDefault = "Default";
-  const std::string kAutoNameCustom = "My Auto";
+  const std::string kAutoNameDefault = "Normal";
+  const std::string kAutoNameInverted = "Inverted";
   std::string m_autoSelected;
   
-  ctre::phoenix::motorcontrol::can::WPI_TalonSRX m_motor0{0};
-  ctre::phoenix::motorcontrol::can::WPI_TalonSRX m_motor1{1};
-  ctre::phoenix::motorcontrol::can::WPI_TalonSRX m_motor2{2};
-  ctre::phoenix::motorcontrol::can::WPI_TalonFX m_falcon0{0};
-  ctre::phoenix::motorcontrol::can::WPI_TalonFX m_falcon1{1};
-  ctre::phoenix::motorcontrol::can::WPI_TalonFX m_falcon2{2};
+  ctre::phoenix::motorcontrol::can::WPI_TalonSRX m_SRX{0};
+  ctre::phoenix::motorcontrol::can::WPI_TalonFX m_FX{0};
 
-  ctre::phoenix::motorcontrol::TalonSRXSimCollection m_motorSim0{m_motor0};
-  ctre::phoenix::motorcontrol::TalonSRXSimCollection m_motorSim1{m_motor1};
-  ctre::phoenix::motorcontrol::TalonSRXSimCollection m_motorSim2{m_motor2};
-  ctre::phoenix::motorcontrol::TalonFXSimCollection m_falconSim0{m_falcon0};
-  ctre::phoenix::motorcontrol::TalonFXSimCollection m_falconSim1{m_falcon1};
-  ctre::phoenix::motorcontrol::TalonFXSimCollection m_falconSim2{m_falcon2};
+  frc::PWMSparkMax m_spark{0};
+  frc::Encoder m_sparkEncoder{0, 1, true};
+  frc::sim::EncoderSim m_sparkEncoderSim{m_sparkEncoder};
+
+  ctre::phoenix::motorcontrol::TalonSRXSimCollection m_SRXSim{m_SRX};
+  ctre::phoenix::motorcontrol::TalonFXSimCollection m_FXSim{m_FX};
 
 
-  frc::sim::DifferentialDrivetrainSim m_driveSim1 =
+  frc::sim::DifferentialDrivetrainSim m_driveSimSRX =
     frc::sim::DifferentialDrivetrainSim::CreateKitbotSim(
       frc::sim::DifferentialDrivetrainSim::KitbotMotor::DualCIMPerSide, // 2 CIMs per side.
       frc::sim::DifferentialDrivetrainSim::KitbotGearing::k10p71,       // 10.71:1
       frc::sim::DifferentialDrivetrainSim::KitbotWheelSize::kSixInch    // 6" diameter wheels.
   );
-  frc::sim::DifferentialDrivetrainSim m_driveSim2 =
+  frc::sim::DifferentialDrivetrainSim m_driveSimFX =
     frc::sim::DifferentialDrivetrainSim::CreateKitbotSim(
       frc::sim::DifferentialDrivetrainSim::KitbotMotor::DualCIMPerSide, // 2 CIMs per side.
       frc::sim::DifferentialDrivetrainSim::KitbotGearing::k10p71,       // 10.71:1
       frc::sim::DifferentialDrivetrainSim::KitbotWheelSize::kSixInch    // 6" diameter wheels.
   );
-  frc::sim::DifferentialDrivetrainSim m_driveSim3 =
-    frc::sim::DifferentialDrivetrainSim::CreateKitbotSim(
-      frc::sim::DifferentialDrivetrainSim::KitbotMotor::DualCIMPerSide, // 2 CIMs per side.
-      frc::sim::DifferentialDrivetrainSim::KitbotGearing::k10p71,       // 10.71:1
-      frc::sim::DifferentialDrivetrainSim::KitbotWheelSize::kSixInch    // 6" diameter wheels.
-  );
-  frc::sim::DifferentialDrivetrainSim m_driveSim4 =
-    frc::sim::DifferentialDrivetrainSim::CreateKitbotSim(
-      frc::sim::DifferentialDrivetrainSim::KitbotMotor::DualCIMPerSide, // 2 CIMs per side.
-      frc::sim::DifferentialDrivetrainSim::KitbotGearing::k10p71,       // 10.71:1
-      frc::sim::DifferentialDrivetrainSim::KitbotWheelSize::kSixInch    // 6" diameter wheels.
-  );
-  frc::sim::DifferentialDrivetrainSim m_driveSim5 =
-    frc::sim::DifferentialDrivetrainSim::CreateKitbotSim(
-      frc::sim::DifferentialDrivetrainSim::KitbotMotor::DualCIMPerSide, // 2 CIMs per side.
-      frc::sim::DifferentialDrivetrainSim::KitbotGearing::k10p71,       // 10.71:1
-      frc::sim::DifferentialDrivetrainSim::KitbotWheelSize::kSixInch    // 6" diameter wheels.
-  );
-  frc::sim::DifferentialDrivetrainSim m_driveSim6 =
+  frc::sim::DifferentialDrivetrainSim m_driveSimSpark =
     frc::sim::DifferentialDrivetrainSim::CreateKitbotSim(
       frc::sim::DifferentialDrivetrainSim::KitbotMotor::DualCIMPerSide, // 2 CIMs per side.
       frc::sim::DifferentialDrivetrainSim::KitbotGearing::k10p71,       // 10.71:1
